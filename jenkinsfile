@@ -1,0 +1,81 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('check out source code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/satyajit-rout-312/threetire.git'
+            }
+        }
+        stage('Frontend Build') {
+            steps {
+                    dir('frontend') {
+                        // Assuming Maven for Frontend (you can change it to Gradle if needed)
+                        sh 'mvn compile'
+                    }
+            }        
+        }      
+        stage('frontend package') {
+            steps {
+                    dir('frontend') {
+                        // Assuming Maven for Frontend (you can change it to Gradle if needed)
+                        sh 'mvn package'
+                    }
+            }        
+        }   
+         stage('backend Build') {
+            steps {
+                    dir('backend') {
+                        // Assuming Maven for Frontend (you can change it to Gradle if needed)
+                        sh 'mvn compile'
+                    }
+            }        
+        }      
+        stage('backend package') {
+            steps {
+                    dir('backend') {
+                        // Assuming Maven for Frontend (you can change it to Gradle if needed)
+                        sh 'mvn package'
+                    }
+            }        
+        }  
+         stage('Build Frontend Docker Image') {
+            steps {
+                script {
+                    // Build frontend Docker image
+                    echo 'Building Frontend Docker Image...'
+                    sh '''
+                        cd frontend  # Navigate to frontend directory
+                        docker build -t rajkumarsatya/newrepo:srimage11 .
+                    '''
+                }
+            }
+        }
+         stage('Build backend Docker Image') {
+            steps {
+                script {
+                    // Build frontend Docker image
+                    echo 'Building Frontend Docker Image...'
+                    sh '''
+                        cd backend  # Navigate to frontend directory
+                        docker build -t rajkumarsatya/newrepo:srimage12 .
+                    '''
+                }
+            }
+        }
+         stage('Push Docker Images') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'dcred', variable: 'DOCKER_TOKEN')]) {
+                        echo 'Logging into Docker Hub using the secret text...'
+                        sh '''
+                            echo "$DOCKER_TOKEN" | docker login -u rajkumarsatya --password-stdin
+                        ''' 
+                        sh 'docker push rajkumarsatya/newrepo:srimage11'
+                        sh 'docker push rajkumarsatya/newrepo:srimage12'
+                    }
+                }
+            }
+        }    
+    }
+}
