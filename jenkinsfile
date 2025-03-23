@@ -76,6 +76,21 @@ pipeline {
                     }
                 }
             }
-        }    
+        }
+         stage('Deploy to EKS') {
+            steps {
+               script {
+                  echo 'Deploying to EKS...'
+                  withCredentials([aws(credentialsId: 'aws-credentials', accessKeyVariable: '*********', secretKeyVariable: '*********')]) {
+                      sh '''
+                         aws eks --region us-west-2 update-kubeconfig --name my-cluster
+                         kubectl apply -f frontend-deployment.yaml
+                         kubectl apply -f backend-deployment.yaml
+                       '''
+                  }
+               }
+            }
+        }
     }
 }
+
